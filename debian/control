@@ -1,0 +1,27 @@
+Source: python-pluginbase
+Section: python
+Priority: optional
+Maintainer: Debian Python Team <team+python@tracker.debian.org>
+Uploaders: Samuel Henrique <samueloph@debian.org>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-pytest,
+               python3-setuptools
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+Testsuite: autopkgtest-pkg-python
+Homepage: https://github.com/mitsuhiko/pluginbase
+Vcs-Git: https://salsa.debian.org/python-team/packages/python-pluginbase.git
+Vcs-Browser: https://salsa.debian.org/python-team/packages/python-pluginbase
+Multi-Arch: foreign
+
+Package: python3-pluginbase
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends}
+Description: Support library for building plugins systems (Python 3)
+ This package contains a module that enables the development of flexible plugin
+ systems in Python.
+ .
+ This package installs the library for Python 3.

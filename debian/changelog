@@ -1,0 +1,86 @@
+python-pluginbase (1.0.1-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 1.0.1
+  * d/python3-pluginbase.docs: Rename README
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 15 Aug 2021 14:18:50 +0100
+
+python-pluginbase (1.0.0-3) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * Bump Standards-Version to 4.4.1.
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Samuel Henrique ]
+  * Set Python Team as the maintainer
+  * Bump DH to 13
+  * Bump Standards-Version to 4.5.1
+  * Add d/gbp.conf
+  * d/control: Add Rules-Requires-Root: no
+  * d/copyright: Improve copyright statement for d/documentation
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 30 Jan 2021 22:04:09 +0000
+
+python-pluginbase (1.0.0-2) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * Use debhelper-compat instead of debian/compat.
+  * Bump Standards-Version to 4.4.0.
+
+  [ Samuel Henrique ]
+  * Drop python2 package (closes: #938033)
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 04 Sep 2019 00:25:35 +0100
+
+python-pluginbase (1.0.0-1) unstable; urgency=medium
+
+  * New upstream version 1.0.0
+  * Bump DH level to 12
+  * Bump Standards-Version to 4.3.0
+
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 05 Feb 2019 20:12:24 +0000
+
+python-pluginbase (0.7-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Set Vcs-* to salsa.debian.org
+  * d/control: Remove ancient X-Python-Version field
+  * d/control: Remove ancient X-Python3-Version field
+
+  [ Samuel Henrique ]
+  * New upstream version 0.7
+  * d/copyright: Update file
+  * d/rules: check BUILD_OPTIONS on tests override
+
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 09 Oct 2018 21:34:54 -0300
+
+python-pluginbase (0.5-1) unstable; urgency=medium
+
+  * Initial release on Debian (closes: #880908)
+  * New upstream version 0.5
+  * Bump DH level to 10
+  * Bump Standards-Version to 4.1.1
+  * Bump watch to v4
+  * Set myself as maintainer
+  * d/control:
+   - add Multi-Arch: foreign
+   - add autopkgtest
+   - point Vcs-* to python-modules
+   - remove double space from description
+   - use https on Homepage field
+  * d/copyright: update copyright
+  * wrap-and-sort -a
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 05 Nov 2017 12:57:01 -0200
+
+python-pluginbase (0.4-0kali1) kali-dev; urgency=medium
+
+  * Initial release
+
+ -- Sophie Brun <sophie@freexian.com>  Mon, 29 Aug 2016 14:43:19 +0200

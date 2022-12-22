@@ -1,0 +1,296 @@
+This document is an extract of the webpage:
+http://pluginbase.pocoo.org/
+
+PluginBase
+
+Ever tried creating a plugin system for a Python application and you
+discovered fighting against the import system? Me too. This is where
+PluginBase comes in.
+
+PluginBase is a module for Python which extends the import system for the
+most common form of plugin usage which is providing a consistent import
+experience for plugins from a variety of sources. Essentially it allows
+you to build very flexible plugin based applications which pull in plugins
+from bundled sources as well as application specific ones without
+bypassing the Python import system.
+
+
+How does it work? It’s super simple:
+
+Step 1:
+
+    Create a “plugin base” object. It defines a pseudo package under which
+all your plugins will reside. For instance it could be
+yourapplication.plugins:
+
+    from pluginbase import PluginBase
+    plugin_base = PluginBase(package='yourapplication.plugins')
+
+Step 2:
+
+    Now that you have a plugin base, you can define a plugin source which
+is the list of all sources which provide plugins:
+
+    plugin_source = plugin_base.make_plugin_source(
+        searchpath=['./path/to/plugins', './path/to/more/plugins'])
+
+Step 3:
+
+    To import a plugin all you need to do is to use the regular import
+system. The only change is that you need to import the plugin source
+through the with statement:
+
+    with plugin_source:
+        from yourapplication.plugins import my_plugin
+    my_plugin.do_something_cool()
+
+    Alternatively you can also import plugins programmatically instead of
+using the import statement:
+
+    my_plugin = plugin_source.load_plugin('my_plugin')
+
+For a more complex example see the one from the git repo:
+pluginbase-example.
+(https://github.com/mitsuhiko/pluginbase/tree/master/example)
+
+
+FAQ
+
+Q: Why is there a plugin base and a plugin source class?
+
+    This decision was taken so that multiple applications can co-exist
+together. For instance imagine you have an application that implements a
+wiki but you want multiple instances of that wiki to exist in the same
+Python interpreter. The plugin sources split out the load paths of the
+different applications.
+
+    Each instance of the wiki would have its own plugin source and they
+can work independently of each other.
+
+Q: Do plugins pollute sys.modules?
+
+    While a plugin source is alive the plugins do indeed reside in
+sys.modules. This decision was make conciously so that as little as
+possible of the Python library ecosystem breaks. However when the plugin
+source gets garbage collected all loaded plugins will also get garbage
+collected.
+
+Q: How does PluginBase deal with different versions of the same plugin?
+
+    Each plugin source works indepdenently of each other. The way this
+works is by internally translating the module name. By default that module
+name is a random number but it can also be forced to a hash of a specific
+value to make it stable across restarts which allows pickle and similar
+libraries to work.
+
+    This internal module renaming means that yourapplication.module.foo
+will internally be called pluginbase._internalspace._sp7...be4 for
+instance. The same plugin loaded from another plugin source will have a
+different internal name.
+
+Q: What happens if a plugin wants to import other modules?
+
+    All fine. Plugins can import from itself as well as other plugins that
+can be located.
+
+Q: Does PluginBase support pickle?
+
+    Yes, pickle works fine for plugins but it does require defining a
+stable identifier when creating a plugin source. This could for instance
+be a file system path:
+
+    plugin_source = base.make_plugin_source(
+        searchpath=[app.plugin_path],
+        identifier=app.config_filename)
+
+Q: What happens if I import from the plugin module without the plugin
+source activated through the with statement?
+
+    The import will fail with a descriptive error message explaining that
+a plugin source needs to be activated.
+
+Q: Can I automatically discover all modules that are available?
+
+    Yes you can. Just use the PluginSource.list_plugins() method which
+returns a list of all plugins that a source can import.
+
+Q: Why would I use this over setuptools based plugins?
+
+    PluginBase and setuptools based plugins solve very different problems
+and are incompatible on an architectural point of view. PluginBase does
+not solve plugin distribution through PyPI but allows plugins to be
+virtualized from each other. Setuptools on the other hand is based on PyPI
+based distribution but piggybacks on top of the regular import system.
+
+    There are advantages and disadvantages to both of them. Setuptools
+based plugins are very useful to extend libraries from other libraries.
+For instance the Jinja2 template engine hooks into the Babel library for
+internationalization through setuptools.
+
+    On the other hand applications distributed to users can benefit from a
+PluginBase based system which allows them to take control over how plugins
+are distributed and full separation from each other.
+
+
+API
+High Level
+
+class pluginbase.PluginBase(package, searchpath=None)
+
+    The plugin base acts as a control object around a dummy Python package
+that acts as a container for plugins. Usually each application creates
+exactly one base object for all plugins.
+    Parameters: 
+
+        package – the name of the package that acts as the plugin base.
+Usually this module does not exist. Unless you know what you are doing you
+should not create this module on the file system.
+        searchpath – optionally a shared search path for modules that will
+be used by all plugin sources registered.
+
+    make_plugin_source(*args, **kwargs)
+
+        Creats a plugin source for this plugin base and returns it. All
+parameters are forwarded to PluginSource.
+
+    package = None
+
+        the name of the dummy package.
+
+    searchpath = None
+
+        the default search path shared by all plugins as list.
+
+class pluginbase.PluginSource(base, identifier=None, searchpath=None,
+persist=False)
+
+    The plugin source is what ultimately decides where plugins are loaded
+from. Plugin bases can have multiple plugin sources which act as isolation
+layer. While this is not a security system it generally is not possible
+for plugins from different sources to accidentally cross talk.
+
+    Once a plugin source has been created it can be used in a with
+statement to change the behavior of the import statement in the block to
+define which source to load the plugins from:
+
+    plugin_source = plugin_base.make_plugin_source(
+        searchpath=['./path/to/plugins', './path/to/more/plugins'])
+
+    with plugin_source:
+        from myapplication.plugins import my_plugin
+
+    Parameters: 
+
+        base – the base this plugin source belongs to.
+        identifier – optionally a stable identifier. If it’s not defined a
+random identifier is picked. It’s useful to set this to a stable value to
+have consistent tracebacks between restarts and to support pickle.
+        searchpath – a list of paths where plugins are looked for.
+        persist – optionally this can be set to True and the plugins will
+not be cleaned up when the plugin source gets garbage collected.
+
+    base = None
+
+        A reference to the plugin base that created this source.
+
+    cleanup()
+
+        Cleans up all loaded plugins manually. This is necessary to call
+only if persist is enabled. Otherwise this happens automatically when the
+source gets garbage collected.
+
+    identifier = None
+
+        the identifier for this source.
+
+    list_plugins()
+
+        Returns a sorted list of all plugins that are available in this
+plugin source. This can be useful to automatically discover plugins that
+are available and is usually used together with load_plugin().
+
+    load_plugin(name)
+
+        This automatically loads a plugin by the given name from the
+current source and returns the module. This is a convenient alternative to
+the import statement and saves you from invoking __import__ or a similar
+function yourself.
+        Parameters: name – the name of the plugin to load.
+
+    mod = None
+
+        a reference to the module on the internal
+pluginsource._internalspace.
+
+    open_resource(plugin, filename)
+
+        This function locates a resource inside the plugin and returns a
+byte stream to the contents of it. If the resource cannot be loaded an
+IOError will be raised. Only plugins that are real Python packages can
+contain resources. Plain old Python modules do not allow this for obvious
+reasons.
+
+        New in version 0.3.
+        Parameters: 
+
+            plugin – the name of the plugin to open the resource of.
+            filename – the name of the file within the plugin to open.
+
+    persist = False
+
+        indicates if this plugin source persists or not.
+
+    searchpath = None
+
+        a list of paths where plugins are searched in.
+
+    spaceid = None
+
+        The internal module name of the plugin source as it appears in the
+pluginsource._internalspace.
+
+pluginbase.get_plugin_source(module=None, stacklevel=None)
+
+    Returns the PluginSource for the current module or the given module.
+The module can be provided by name (in which case an import will be
+attempted) or as a module object.
+
+    If no plugin source can be discovered, the return value from this
+method is None.
+
+    This function can be very useful if additional data has been attached
+to the plugin source. For instance this could allow plugins to get access
+to a back reference to the application that created them.
+    Parameters: 
+
+        module – optionally the module to locate the plugin source of.
+        stacklevel – defines how many levels up the module should search
+for before it discovers the plugin frame. The default is 0. This can be
+useful for writing wrappers around this function.
+
+Import Hook Control
+
+pluginbase.import_hook.enable(self)
+
+    Enables the import hook which drives the plugin base system. This is
+the default.
+
+pluginbase.import_hook.disable(self)
+
+    Disables the import hook and restores the default import system
+behavior. This effectively breaks pluginbase but can be useful for testing
+purposes.
+
+pluginbase.import_hook.enabled
+
+    Indicates if the import hook is currently active or not.
+
+Internals
+
+pluginbase._internalspace = <module 'pluginbase._internalspace'
+(built-in)>
+
+    This module is where pluginbase keeps track of all loaded plugins.
+Generally one can completely ignore the existence of it, but in some
+situations it might be useful to discover currently loaded modules through
+this when debugging.
